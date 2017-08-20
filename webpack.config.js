@@ -34,7 +34,7 @@ module.exports = {
   output: {
     libraryTarget: 'commonjs',
     path: path.resolve('.webpack'),
-    filename: 'handler.js',
+    filename: 'src/remote/handler.js',
   },
   externals: [
     'aws-sdk', // we have this provided on the box
