@@ -1,8 +1,11 @@
 {
-  "name": "chrome-on-lambda",
+  "name": "testem-chrome-on-lambda",
   "version": "0.0.1",
   "engines": {
     "node": ">= 6.10.0"
+  },
+  "scripts": {
+    "deploy": "node_modules/serverless/bin/serverless deploy"
   },
   "dependencies": {
     "chrome-remote-interface": "^0.24.4",
@@ -15,6 +18,7 @@
     "babel-preset-env": "^1.6.0",
     "babel-preset-stage-3": "^6.24.1",
     "decompress": "^4.2.0",
+    "serverless": "^1.20.2",
     "serverless-webpack": "^2.2.0",
     "webpack": "^3.5.5"
   },
