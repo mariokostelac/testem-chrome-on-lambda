@@ -117,7 +117,9 @@ var run = async function(event, context, callback) {
   const chrome = await launch()
   const { Page, DOM } = await cdp()
   await Page.navigate({ url: url })
-  const result = await waitUntilTestsFinish(DOM, 10000)
+  console.log(`Navigated to ${url}`)
+
+  const result = await waitUntilTestsFinish(DOM, 30000)
   chrome.kill();
   callback(null, result);
 };
