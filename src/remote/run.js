@@ -122,6 +122,8 @@ async function cdp() {
 }
 
 var run = async function(event, context, callback) {
+  const testsStartTimeoutMs = parseInt(process.env["TESTS_START_TIMEOUT_MS"]) || 60000;
+  const testsRunTimeoutMs = parseInt(process.env["TESTS_RUN_TIMEOUT_MS"]) || 30000;
   let chrome = null;
   try {
     let url = 'https://www.google.com'
@@ -138,10 +140,10 @@ var run = async function(event, context, callback) {
     await Page.navigate({ url: url })
     globalTimer.report(`Navigated to ${url}`)
 
-    const resultNodeId = await waitUntilTestsStartRunning(DOM, 30000)
+    const resultNodeId = await waitUntilTestsStartRunning(DOM, testsStartTimeoutMs)
     globalTimer.report('Tests started running')
 
-    const result = await waitUntilTestsFinish(DOM, resultNodeId, 30000)
+    const result = await waitUntilTestsFinish(DOM, resultNodeId, testsRunTimeoutMs)
     globalTimer.report('Running tests finished')
 
     // TODO: make sure we called ember server and reported success
