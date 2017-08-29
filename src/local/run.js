@@ -24,7 +24,8 @@ let run = async function(args) {
     // TODO: extract the port from given url
     await ngrok.ensureProxyIsRunning(7357)
 
-    // same here
+    // TODO: extract the port from given localhost URL
+    // TODO: replace with correct URL, not this hardcoded one
     const proxiedUrl = data.url.replace('http://localhost:7357/', 'http://ac0a0f0b.ngrok.io/')
 
     const params = {
