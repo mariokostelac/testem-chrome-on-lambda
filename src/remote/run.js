@@ -5,6 +5,7 @@ const { spawn } = require('child_process')
 const got = require('got')
 const CDP = require('chrome-remote-interface')
 const { waitUntilResolves } = require('../utils')
+const { Timer } = require('../timer')
 
 const defaultChromeFlags = [
   '--no-default-browser-check',
@@ -115,13 +116,18 @@ var run = async function(event, context, callback) {
   }  
 
   const chrome = await launch()
+  globalTimer.report('Chrome launched')
   const { Page, DOM } = await cdp()
   await Page.navigate({ url: url })
-  console.log(`Navigated to ${url}`)
+  globalTimer.report(`Navigated to ${url}`)
 
   const result = await waitUntilTestsFinish(DOM, 30000)
+  globalTimer.report('Running tests finished')
+
   chrome.kill();
   callback(null, result);
 };
+
+let globalTimer = new Timer(console.log)
 
 module.exports = run;
