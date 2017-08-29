@@ -54,11 +54,23 @@ function waitUntilChromeReady(timeout) {
   }, timeout)
 }
 
-function waitUntilTestsFinish(DOM, timeout) {
+function waitUntilTestsStartRunning(DOM, timeout) {
   return waitUntilResolves(async () => {
     const documentNode = await DOM.getDocument()
+    if (documentNode.root.nodeId === 0) {
+      throw 'Document node is not available yet'
+    }
     const resultBoxNode = await DOM.querySelector({ nodeId: documentNode.root.nodeId, selector: '#qunit-testresult-display' })
-    const { outerHTML } = await DOM.getOuterHTML({ nodeId: resultBoxNode.nodeId })
+    if (resultBoxNode.nodeId === 0) {
+      throw 'Test results node is not available yet'
+    }
+    return resultBoxNode.nodeId;
+  }, timeout)
+};
+
+function waitUntilTestsFinish(DOM, resultNodeId, timeout) {
+  return waitUntilResolves(async () => {
+    const { outerHTML } = await DOM.getOuterHTML({ nodeId: resultNodeId })
     const isFinished = outerHTML.match(/Tests completed in/)
     if (!isFinished) {
       throw `Tests haven't finished yet`
@@ -117,11 +129,15 @@ var run = async function(event, context, callback) {
 
   const chrome = await launch()
   globalTimer.report('Chrome launched')
+
   const { Page, DOM } = await cdp()
   await Page.navigate({ url: url })
   globalTimer.report(`Navigated to ${url}`)
 
-  const result = await waitUntilTestsFinish(DOM, 30000)
+  const resultNodeId = await waitUntilTestsStartRunning(DOM, 30000)
+  globalTimer.report('Tests started running')
+
+  const result = await waitUntilTestsFinish(DOM, resultNodeId, 30000)
   globalTimer.report('Running tests finished')
 
   chrome.kill();
