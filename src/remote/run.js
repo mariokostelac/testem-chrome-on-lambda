@@ -62,7 +62,9 @@ function waitUntilTestsStartRunning(DOM, timeout) {
     }
     const resultBoxNode = await DOM.querySelector({ nodeId: documentNode.root.nodeId, selector: '#qunit-testresult-display' })
     if (resultBoxNode.nodeId === 0) {
-      throw 'Test results node is not available yet'
+      const bodyNodeId = await DOM.querySelector({ nodeId: documentNode.root.nodeId, selector: 'body' })
+      const { outerHTML } = await DOM.getOuterHTML(bodyNodeId)
+      throw `Tests haven't loaded yet. Loaded html: ${outerHTML}`
     }
     return resultBoxNode.nodeId;
   }, timeout)
