@@ -144,6 +144,8 @@ var run = async function(event, context, callback) {
     const result = await waitUntilTestsFinish(DOM, resultNodeId, 30000)
     globalTimer.report('Running tests finished')
 
+    // TODO: make sure we called ember server and reported success
+
     callback(null, result)
   } catch(err) {
     callback(err, null)
