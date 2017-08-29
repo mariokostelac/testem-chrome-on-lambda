@@ -22,11 +22,10 @@ let run = async function(args) {
         throw `ngrok can't be found. https://ngrok.com/download`
     }
     // TODO: extract the port from given url
-    await ngrok.ensureProxyIsRunning(7357)
+    const proxyRootUrl = await ngrok.ensureProxyIsRunning(7357)
 
     // TODO: extract the port from given localhost URL
-    // TODO: replace with correct URL, not this hardcoded one
-    const proxiedUrl = data.url.replace('http://localhost:7357/', 'http://ac0a0f0b.ngrok.io/')
+    const proxiedUrl = data.url.replace('http://localhost:7357', proxyRootUrl)
 
     const params = {
         FunctionName: 'chrome-on-lambda-dev-run',

@@ -31,13 +31,26 @@ let isNgrokProcessStillAlive = function(pid) {
     }
 }
 
+let getRunningProxy = async function() {
+    const proxies = await got(`localhost:4040/api/tunnels`, { json: true, retries: 2, timeout: 200 })
+    const tunnels = proxies.body.tunnels
+    console.log(`${tunnels.length} tunnels found`)
+    for (var i = 0, len = tunnels.length; i < len; ++i) {
+        if (tunnels[i].public_url.startsWith('https://')) {
+            console.log(`Using tunnel ${tunnels[i].public_url}`)
+            return tunnels[i].public_url;
+        }
+    }
+    throw 'Cannot find https tunnel'
+}
+
 // NOTE: this function is pretty racy
 let ensureProxyIsRunning = async function(port) {
     const pidFile = pidFileForPort(port)
     if (fs.existsSync(pidFile)) {
         const existingPid = +(fs.readFileSync(pidFile).toString())
         if (isNgrokProcessStillAlive(existingPid)) {
-            return
+            return await getRunningProxy()
         }
 
         // clean the pid file so the new process can start
@@ -51,7 +64,7 @@ let ensureProxyIsRunning = async function(port) {
     fs.writeSync(pidFd, process.pid)
     fs.closeSync(pidFd)
 
-    return
+    return await getRunningProxy()
 }
 
 module.exports = {
