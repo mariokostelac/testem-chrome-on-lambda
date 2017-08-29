@@ -122,28 +122,36 @@ async function cdp() {
 }
 
 var run = async function(event, context, callback) {
-  let url = 'https://www.google.com'
-  if (typeof(event) === 'object' && event['url']) {
-    url = event['url']
-  } else if (typeof(event) === 'string' && event.length > 0) {
-    url = event
-  }  
+  let chrome = null;
+  try {
+    let url = 'https://www.google.com'
+    if (typeof(event) === 'object' && event['url']) {
+      url = event['url']
+    } else if (typeof(event) === 'string' && event.length > 0) {
+      url = event
+    }
 
-  const chrome = await launch()
-  globalTimer.report('Chrome launched')
+    chrome = await launch()
+    globalTimer.report('Chrome launched')
 
-  const { Page, DOM } = await cdp()
-  await Page.navigate({ url: url })
-  globalTimer.report(`Navigated to ${url}`)
+    const { Page, DOM } = await cdp()
+    await Page.navigate({ url: url })
+    globalTimer.report(`Navigated to ${url}`)
 
-  const resultNodeId = await waitUntilTestsStartRunning(DOM, 30000)
-  globalTimer.report('Tests started running')
+    const resultNodeId = await waitUntilTestsStartRunning(DOM, 30000)
+    globalTimer.report('Tests started running')
 
-  const result = await waitUntilTestsFinish(DOM, resultNodeId, 30000)
-  globalTimer.report('Running tests finished')
+    const result = await waitUntilTestsFinish(DOM, resultNodeId, 30000)
+    globalTimer.report('Running tests finished')
 
-  chrome.kill();
-  callback(null, result);
+    callback(null, result)
+  } catch(err) {
+    callback(err, null)
+  }
+
+  if (chrome !== null) {
+    chrome.kill()
+  }
 };
 
 let globalTimer = new Timer(console.log)
