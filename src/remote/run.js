@@ -54,31 +54,27 @@ function waitUntilChromeReady(timeout) {
   }, timeout)
 }
 
-function waitUntilTestsStartRunning(DOM, timeout) {
-  return waitUntilResolves(async () => {
-    const documentNode = await DOM.getDocument()
-    if (documentNode.root.nodeId === 0) {
-      throw 'Document node is not available yet'
-    }
-    const resultBoxNode = await DOM.querySelector({ nodeId: documentNode.root.nodeId, selector: '#qunit-testresult-display' })
-    if (resultBoxNode.nodeId === 0) {
+function waitForTestemEvent(event, timeout, DOM, Console) {
+  return new Promise(function(fullfill, reject) {
+    const cancelId = setTimeout(async function() {
+      const documentNode = await DOM.getDocument()
+      if (documentNode.root.nodeId === 0) {
+        reject('Document node is not available yet')
+      }
+
       const bodyNodeId = await DOM.querySelector({ nodeId: documentNode.root.nodeId, selector: 'body' })
       const { outerHTML } = await DOM.getOuterHTML(bodyNodeId)
-      throw `Tests haven't loaded yet. Loaded html: ${outerHTML}`
-    }
-    return resultBoxNode.nodeId;
-  }, timeout)
-};
+      reject(`Body HTML: ${outerHTML}`)
+    }, timeout)
 
-function waitUntilTestsFinish(DOM, resultNodeId, timeout) {
-  return waitUntilResolves(async () => {
-    const { outerHTML } = await DOM.getOuterHTML({ nodeId: resultNodeId })
-    const isFinished = outerHTML.match(/Tests completed in/)
-    if (!isFinished) {
-      throw `Tests haven't finished yet`
-    }
-    return outerHTML;
-  }, timeout)
+    Console.messageAdded(function(msgWrapper) {
+      const message = msgWrapper.message
+      if (message.text === event) {
+        clearTimeout(cancelId)
+        fullfill()
+      }
+    })
+  })
 };
 
 function launch(options = {}) {
@@ -90,7 +86,7 @@ function launch(options = {}) {
       chrome.stdout.on('data', logInfo);
       //chrome.stderr.on('data', logError);
       chrome.on('close', (code) => {
-        console.log(`chrome process exited with code ${code}`);
+        globalTimer.report(`Chrome exited with ${code}`)
       });
     
       try {
@@ -105,25 +101,33 @@ function launch(options = {}) {
 async function cdp() {
   const [tab] = await CDP.List()
   const client = await CDP({ host: '127.0.0.1', target: tab })
-  const { Page, DOM } = client
+  const { Page, DOM, Runtime, Console } = client
 
   return new Promise(async function(fullfill, reject) {
     try {
       await Promise.all([
         Page.enable(),
         DOM.enable(),
+        Runtime.enable(),
+        Console.enable(),
       ])
   
-      fullfill({ Page, DOM })
+      fullfill({ Page, DOM, Runtime, Console })
     } catch (err) {
       reject(err)
     }
   });
 }
 
+async function sleep(durationMs) {
+  return new Promise(function(fullfill, _) {
+    setTimeout(fullfill, durationMs)
+  });
+}
+
 var run = async function(event, context, callback) {
   const testsStartTimeoutMs = parseInt(process.env["TESTS_START_TIMEOUT_MS"]) || 60000;
-  const testsRunTimeoutMs = parseInt(process.env["TESTS_RUN_TIMEOUT_MS"]) || 30000;
+  const testsRunTimeoutMs = parseInt(process.env["TESTS_RUN_TIMEOUT_MS"]) || 300000;
   let chrome = null;
   try {
     let url = 'https://www.google.com'
@@ -134,22 +138,47 @@ var run = async function(event, context, callback) {
     }
 
     chrome = await launch()
-    globalTimer.report('Chrome launched')
+    globalTimer.report(`Chrome launched with PID ${chrome.pid}`)
 
-    const { Page, DOM } = await cdp()
+    const { Page, DOM, Runtime, Console } = await cdp()
+
+    Console.messageAdded(function(msgWrapper) {
+      globalTimer.report(msgWrapper.message.text)
+    })
+
+    Runtime.executionContextCreated(async function() {
+      const { result, exceptionDetails } = await Runtime.evaluate({ expression: "typeof(window.Testem.emit) === 'function'", returnByValue: true })
+      if (result.value === true) {
+        console.log("Testem is loaded. Patching emitMessage method!")
+        const patchEmitMessage = function() {
+          Testem.originalEmitMessage = Testem.emitMessage
+          Testem.emitMessage = function() {
+            this.originalEmitMessage.apply(this, arguments)
+            this.console.log(`testem-client:${arguments[0]}`)
+          }
+        }
+        const patchScript = `(${patchEmitMessage.toString()})()`
+        const { exceptionDetails } = await Runtime.evaluate({ expression: patchScript })
+        if (typeof(exceptionDetails) !== 'undefined') {
+          console.error("Error while patching emitMessage", exceptionDetails)
+        }
+
+        console.log("Patching emitMessage successful!")
+      }
+    })
+
     await Page.navigate({ url: url })
     globalTimer.report(`Navigated to ${url}`)
 
-    const resultNodeId = await waitUntilTestsStartRunning(DOM, testsStartTimeoutMs)
-    globalTimer.report('Tests started running')
+    await waitForTestemEvent('testem-client:tests-start', testsStartTimeoutMs, DOM, Console)
+    await waitForTestemEvent('testem-client:all-test-results', testsRunTimeoutMs, DOM, Console)
 
-    const result = await waitUntilTestsFinish(DOM, resultNodeId, testsRunTimeoutMs)
-    globalTimer.report('Running tests finished')
+    // make sure browser runner has time to process the last event
+    await sleep(1000)
 
-    // TODO: make sure we called ember server and reported success
-
-    callback(null, result)
+    callback(null, 'ok')
   } catch(err) {
+    console.error(err)
     callback(err, null)
   }
 
