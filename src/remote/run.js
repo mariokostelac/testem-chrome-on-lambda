@@ -82,9 +82,13 @@ function launch(options = {}) {
   const chromeArgs = options['chromeArgs'] || defaultChromeFlags;
   return new Promise(async function(fullfill, reject) {
       const chrome = spawn(resolveChromePath(), chromeArgs)
+      const noOp = function() {}
       process.on('exit', () => { chrome.kill() })
-      chrome.stdout.on('data', logInfo);
-      //chrome.stderr.on('data', logError);
+
+      // Not sure why, but not consuming these messages makes the process halt.
+      chrome.stdout.on('data', noOp);
+      chrome.stderr.on('data', noOp);
+
       chrome.on('close', (code) => {
         globalTimer.report(`Chrome exited with ${code}`)
       });
