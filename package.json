@@ -5,10 +5,15 @@
     "node": ">= 6.10.0"
   },
   "scripts": {
-    "deploy": "node_modules/serverless/bin/serverless deploy"
+    "start": "./src/local/run.js",
+    "deploy": "./node_modules/serverless/bin/serverless deploy",
+    "serverless": "./node_modules/serverless/bin/serverless"
+  },
+  "bin": {
+    "chrome-on-lambda": "./src/local/run.js"
   },
   "dependencies": {
-    "chrome-remote-interface": "^0.24.4",
+    "chrome-remote-interface": "^0.24.5",
     "got": "^7.1.0"
   },
   "devDependencies": {
