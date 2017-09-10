@@ -5,7 +5,7 @@ const webpack = require('webpack')
 const chromeTarball = path.join(__dirname, 'chrome/chrome-headless-lambda.tar.gz')
 const webpackDir = path.join(__dirname, '.webpack/')
 
-function extractTarball (archive, to) {
+function extractTarball(archive, to) {
   return {
     apply: (compiler) => {
       compiler.plugin('emit', (compilation, callback) => {
