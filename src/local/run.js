@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env node --harmony-async-await
 const AWS = require('aws-sdk')
 const path = require('path')
 const { exec } = require('child_process')

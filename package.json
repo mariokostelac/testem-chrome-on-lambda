@@ -11,6 +11,7 @@
     "chrome-on-lambda": "./src/local/run.js"
   },
   "dependencies": {
+    "aws-sdk": "^2.112.0",
     "chrome-remote-interface": "^0.24.5",
     "got": "^7.1.0"
   }
