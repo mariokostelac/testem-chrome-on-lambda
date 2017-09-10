@@ -147,6 +147,9 @@ var run = async function(event, context, callback) {
     const { Page, DOM, Runtime, Console } = await cdp()
 
     Console.messageAdded(function(msgWrapper) {
+      if (!msgWrapper.message.text.startsWith("testem-client:")) {
+        return
+      }
       globalTimer.report(msgWrapper.message.text)
     })
 
