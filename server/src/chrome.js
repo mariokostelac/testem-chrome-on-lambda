@@ -1,11 +1,9 @@
-'use strict';
-
 const { resolve } = require('path')
 const { spawn } = require('child_process')
 const got = require('got')
 const CDP = require('chrome-remote-interface')
-const { waitUntilResolves } = require('../utils')
-const { Timer } = require('../timer')
+const { waitUntilResolves } = require('./utils')
+const { Timer } = require('./timer')
 
 const defaultChromeFlags = [
   '--no-default-browser-check',
@@ -196,4 +194,4 @@ var run = async function(event, context, callback) {
 
 let globalTimer = new Timer(console.log)
 
-module.exports = run;
+module.exports.run = run;

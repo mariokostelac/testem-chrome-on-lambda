@@ -5,9 +5,7 @@
     "node": ">= 6.10.0"
   },
   "scripts": {
-    "start": "./src/local/run.js",
-    "deploy": "./node_modules/serverless/bin/serverless deploy",
-    "serverless": "./node_modules/serverless/bin/serverless"
+    "start": "./src/local/run.js"
   },
   "bin": {
     "chrome-on-lambda": "./src/local/run.js"
@@ -15,33 +13,5 @@
   "dependencies": {
     "chrome-remote-interface": "^0.24.5",
     "got": "^7.1.0"
-  },
-  "devDependencies": {
-    "babel-core": "^6.26.0",
-    "babel-loader": "^7.1.2",
-    "babel-plugin-transform-runtime": "^6.23.0",
-    "babel-preset-env": "^1.6.0",
-    "babel-preset-stage-3": "^6.24.1",
-    "decompress": "^4.2.0",
-    "serverless": "^1.20.2",
-    "serverless-webpack": "^2.2.0",
-    "webpack": "^3.5.5"
-  },
-  "babel": {
-    "sourceMaps": "inline",
-    "plugins": [
-      "transform-runtime"
-    ],
-    "presets": [
-      [
-        "env",
-        {
-          "targets": {
-            "node": "6.10.3"
-          }
-        }
-      ],
-      "stage-3"
-    ]
   }
 }

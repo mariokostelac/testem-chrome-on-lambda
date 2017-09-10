@@ -18,7 +18,7 @@ function extractTarball(archive, to) {
 }
 
 module.exports = {
-  entry: './src/remote/handler',
+  entry: './src/chrome',
   target: 'node',
   module: {
     loaders: [
@@ -34,7 +34,7 @@ module.exports = {
   output: {
     libraryTarget: 'commonjs',
     path: path.resolve('.webpack'),
-    filename: 'src/remote/handler.js',
+    filename: 'src/chrome.js',
   },
   externals: [
     'aws-sdk', // we have this provided on the box
