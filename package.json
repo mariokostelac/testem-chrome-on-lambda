@@ -2,7 +2,7 @@
   "name": "testem-chrome-on-lambda",
   "version": "0.0.1",
   "engines": {
-    "node": ">= 6.10.0"
+    "node": ">= 7.0.0"
   },
   "scripts": {
     "start": "./src/local/run.js"
