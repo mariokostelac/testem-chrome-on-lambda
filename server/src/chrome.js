@@ -67,7 +67,12 @@ function waitForTestemEvent(event, timeout, DOM, Console) {
 
     Console.messageAdded(function(msgWrapper) {
       const message = msgWrapper.message
-      if (message.text === event) {
+      if (message.text.startsWith('testem-client:') && event === '*') {
+        clearTimeout(cancelId)
+        fullfill()
+        return
+      }
+      if (message.text === `testem-client:${event}`) {
         clearTimeout(cancelId)
         fullfill()
       }
@@ -176,8 +181,12 @@ var run = async function(event, context, callback) {
     await Page.navigate({ url: url })
     globalTimer.report(`Navigated to ${url}`)
 
-    await waitForTestemEvent('testem-client:tests-start', testsStartTimeoutMs, DOM, Console)
-    await waitForTestemEvent('testem-client:all-test-results', testsRunTimeoutMs, DOM, Console)
+    // These events can come very close to each other so we do not want to drop events between
+    // waiting for the first one and setting up the listener for the second one.
+    const testsStarted = waitForTestemEvent('*', testsStartTimeoutMs, DOM, Console)
+    const testsFinished = waitForTestemEvent('all-test-results', testsRunTimeoutMs, DOM, Console)
+    await testsStarted
+    await testsFinished
 
     // make sure browser runner has time to process the last event
     await sleep(1000)
