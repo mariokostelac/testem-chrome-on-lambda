@@ -113,7 +113,7 @@ async function cdp() {
         Runtime.enable(),
         Console.enable(),
       ])
-  
+
       fullfill({ Page, DOM, Runtime, Console })
     } catch (err) {
       reject(err)
@@ -128,6 +128,7 @@ async function sleep(durationMs) {
 }
 
 var run = async function(event, context, callback) {
+  globalTimer.reset()
   const testsStartTimeoutMs = parseInt(process.env["TESTS_START_TIMEOUT_MS"]) || 60000;
   const testsRunTimeoutMs = parseInt(process.env["TESTS_RUN_TIMEOUT_MS"]) || 300000;
   let chrome = null;
